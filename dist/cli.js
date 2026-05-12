@@ -5950,7 +5950,7 @@ function stripAnsiCode(string2) {
   return string2.replace(ANSI_REGEXP, "");
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/ansi/1.0.0/colors.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/ansi/1.1.0/colors.js
 var proto = /* @__PURE__ */ Object.create(null);
 var methodNames = Object.keys(colors_exports);
 for (const name of methodNames) {
@@ -5980,7 +5980,7 @@ function factory(stack = []) {
   return colors2;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.0.0/runtime/get_args.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.1.0/runtime/get_args.js
 function getArgs() {
   const { Deno: Deno4, process: process2, Bun } = globalThis;
   return Deno4?.args ?? Bun?.argv.slice(2) ?? process2?.argv.slice(2) ?? [];
@@ -6107,7 +6107,7 @@ function closestString(givenWord, possibleWords, options) {
   return nearestWord;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/_utils.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/_utils.js
 function paramCaseToCamelCase(str) {
   return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 }
@@ -6172,11 +6172,18 @@ function matchWildCardOption(name, option) {
   }
   return option;
 }
+function getDefaultValues(option) {
+  const values = option.args?.map((arg) => getDefaultValue(arg)) ?? [];
+  while (values.length > 1 && values.at(-1) === void 0) {
+    values.pop();
+  }
+  return values.length ? values : void 0;
+}
 function getDefaultValue(option) {
-  return typeof option.default === "function" ? option.default() : option.default;
+  return typeof option.default === "function" ? option.default() : option.default !== void 0 ? option.default : "args" in option && option.args?.some((arg) => arg.default !== void 0) ? getDefaultValues(option) : void 0;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/_errors.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/_errors.js
 var FlagsError = class _FlagsError extends Error {
   constructor(message) {
     super(message);
@@ -6213,12 +6220,6 @@ var DuplicateOptionError = class _DuplicateOptionError extends ValidationError {
     Object.setPrototypeOf(this, _DuplicateOptionError.prototype);
   }
 };
-var InvalidOptionError = class _InvalidOptionError extends ValidationError {
-  constructor(option, options) {
-    super(`Invalid option "${getFlag(option)}".${didYouMeanOption(option, options)}`);
-    Object.setPrototypeOf(this, _InvalidOptionError.prototype);
-  }
-};
 var UnknownOptionError = class _UnknownOptionError extends ValidationError {
   constructor(option, options) {
     super(`Unknown option "${getFlag(option)}".${didYouMeanOption(option, options)}`);
@@ -6237,10 +6238,10 @@ var InvalidOptionValueError = class _InvalidOptionValueError extends ValidationE
     Object.setPrototypeOf(this, _InvalidOptionValueError.prototype);
   }
 };
-var UnexpectedOptionValueError = class extends ValidationError {
+var UnexpectedOptionValueError = class _UnexpectedOptionValueError extends ValidationError {
   constructor(option, value) {
     super(`Option "${getFlag(option)}" doesn't take a value, but got "${value}".`);
-    Object.setPrototypeOf(this, InvalidOptionValueError.prototype);
+    Object.setPrototypeOf(this, _UnexpectedOptionValueError.prototype);
   }
 };
 var OptionNotCombinableError = class _OptionNotCombinableError extends ValidationError {
@@ -6279,14 +6280,32 @@ var UnexpectedArgumentAfterVariadicArgumentError = class _UnexpectedArgumentAfte
     Object.setPrototypeOf(this, _UnexpectedArgumentAfterVariadicArgumentError.prototype);
   }
 };
-var InvalidTypeError = class extends ValidationError {
+var InvalidTypeError = class _InvalidTypeError extends ValidationError {
   constructor({ label, name, value, type }, expected) {
     super(`${label} "${name}" must be of type "${type}", but got "${value}".` + (expected ? ` Expected values: ${expected.map((value2) => `"${value2}"`).join(", ")}` : ""));
-    Object.setPrototypeOf(this, MissingOptionValueError.prototype);
+    Object.setPrototypeOf(this, _InvalidTypeError.prototype);
+  }
+};
+var MissingArgumentError = class _MissingArgumentError extends ValidationError {
+  constructor(name) {
+    super(`Missing argument: ${name}`);
+    Object.setPrototypeOf(this, _MissingArgumentError.prototype);
+  }
+};
+var MissingArgumentsError = class _MissingArgumentsError extends ValidationError {
+  constructor(names) {
+    super(`Missing argument(s): ${names.join(", ")}`);
+    Object.setPrototypeOf(this, _MissingArgumentsError.prototype);
+  }
+};
+var TooManyArgumentsError = class _TooManyArgumentsError extends ValidationError {
+  constructor(args) {
+    super(`Too many arguments: ${args.join(" ")}`);
+    Object.setPrototypeOf(this, _TooManyArgumentsError.prototype);
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/types/boolean.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/types/boolean.js
 var boolean = (type) => {
   if (~["1", "true"].indexOf(type.value)) {
     return true;
@@ -6297,21 +6316,23 @@ var boolean = (type) => {
   throw new InvalidTypeError(type, ["true", "false", "1", "0"]);
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/types/number.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/types/number.js
 var number = (type) => {
-  const value = Number(type.value);
-  if (Number.isFinite(value)) {
-    return value;
+  if (type.value) {
+    const value = Number(type.value);
+    if (Number.isFinite(value)) {
+      return value;
+    }
   }
   throw new InvalidTypeError(type);
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/types/string.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/types/string.js
 var string = ({ value }) => {
   return value;
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/_validate_flags.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/_validate_flags.js
 function validateFlags(ctx, opts, options = /* @__PURE__ */ new Map()) {
   if (!opts.flags) {
     return;
@@ -6360,12 +6381,18 @@ function setDefaultValues(ctx, opts) {
     if (!name) {
       name = paramCaseToCamelCase(option.name);
     }
-    const hasDefaultValue = (!opts.ignoreDefaults || typeof opts.ignoreDefaults[name] === "undefined") && typeof ctx.flags[name] === "undefined" && (typeof option.default !== "undefined" || typeof defaultValue !== "undefined");
+    const hasDefaultValue = (!opts.ignoreDefaults || typeof opts.ignoreDefaults[name] === "undefined") && typeof ctx.flags[name] === "undefined" && (typeof option.default !== "undefined" || option.args?.some((arg) => arg.default !== void 0) || typeof defaultValue !== "undefined");
     if (hasDefaultValue) {
       ctx.flags[name] = getDefaultValue(option) ?? defaultValue;
       ctx.defaults[option.name] = true;
       if (typeof option.value === "function") {
         ctx.flags[name] = option.value(ctx.flags[name]);
+      } else if (option.args?.length) {
+        for (const [index, arg] of option.args.entries()) {
+          if (typeof arg.value === "function") {
+            ctx.flags[name][index] = arg.value(ctx.flags[name][index]);
+          }
+        }
       }
     }
   }
@@ -6440,7 +6467,7 @@ function isset(flagName, flags) {
   return typeof flags[name] !== "undefined";
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/types/integer.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/types/integer.js
 var integer = (type) => {
   const value = Number(type.value);
   if (Number.isInteger(value)) {
@@ -6449,7 +6476,7 @@ var integer = (type) => {
   throw new InvalidTypeError(type);
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.0.0/flags.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/flags/1.1.0/flags.js
 var DefaultTypes = {
   string,
   number,
@@ -6474,10 +6501,12 @@ function parseFlags(argsOrCtx = getArgs(), opts = {}) {
   ctx.stopEarly = false;
   ctx.stopOnUnknown = false;
   ctx.defaults ??= {};
+  ctx.parsedFlags ??= [];
   opts.dotted ??= true;
   validateOptions(opts);
   const options = parseArgs(ctx, args, opts);
   validateFlags(ctx, opts, options);
+  validateArguments(ctx, opts, options);
   if (opts.dotted) {
     parseDottedOptions(ctx);
   }
@@ -6500,8 +6529,10 @@ function validateOptions(opts) {
 function parseArgs(ctx, args, opts) {
   const optionsMap = /* @__PURE__ */ new Map();
   let inLiteral = false;
+  let argIndex = 0;
   for (let argsIndex = 0; argsIndex < args.length; argsIndex++) {
     let parseNext = function(option2) {
+      let skipOptionArgument = false;
       if (negate) {
         setFlagValue(false);
         return;
@@ -6517,9 +6548,6 @@ function parseArgs(ctx, args, opts) {
       if (!arg.type) {
         arg.type = "boolean";
       }
-      if (!option2.args?.length && arg.type === "boolean" && arg.optional === void 0) {
-        arg.optional = true;
-      }
       if (arg.optional) {
         inOptionalArg = true;
       } else if (inOptionalArg) {
@@ -6527,25 +6555,44 @@ function parseArgs(ctx, args, opts) {
       }
       let result;
       let increase = false;
-      if (arg.list && hasNext(arg)) {
-        const parsed = next().split(arg.separator || ",").map((nextValue) => {
-          const value = parseValue(option2, arg, nextValue);
-          if (typeof value === "undefined") {
-            throw new InvalidOptionValueError(option2.name, arg.type ?? "?", nextValue);
-          }
-          return value;
+      if (hasNext(arg) && (!option2.required || arg.optional) && next() === "") {
+        if (arg.variadic) {
+          skipOptionArgument = true;
+        } else if (option2.args?.length === 1) {
+          skipArgument = true;
+        } else {
+          result = "";
+        }
+        increase = true;
+      } else if (arg.list && hasNext(arg)) {
+        const parsed = parseListValue(opts, {
+          label: "Option",
+          name: `--${option2.name}`,
+          type: arg.type || "string",
+          value: next(),
+          separator: arg.separator
         });
         if (parsed?.length) {
           result = parsed;
         }
+        increase = true;
       } else {
         if (hasNext(arg)) {
-          result = parseValue(option2, arg, next());
+          result = parseValue(opts, {
+            label: "Option",
+            name: `--${option2.name}`,
+            type: arg.type || "string",
+            value: next()
+          });
+          if (typeof result !== "undefined") {
+            increase = true;
+          }
         } else if (arg.optional && arg.type === "boolean") {
           result = true;
         }
       }
       if (increase && typeof currentValue === "undefined") {
+        ctx.parsedFlags.push(args[argsIndex + 1]);
         argsIndex++;
         if (!arg.variadic) {
           optionArgsIndex++;
@@ -6553,9 +6600,21 @@ function parseArgs(ctx, args, opts) {
           throw new UnexpectedArgumentAfterVariadicArgumentError(next());
         }
       }
+      if (skipOptionArgument) {
+        if (hasNext(arg)) {
+          parseNext(option2);
+        }
+        return;
+      }
+      if (skipArgument) {
+        return;
+      }
       if (typeof result !== "undefined" && (option2.args.length > 1 || arg.variadic)) {
         if (!ctx.flags[propName]) {
           setFlagValue([]);
+        }
+        if (result === "") {
+          result = void 0;
         }
         ctx.flags[propName].push(result);
         if (hasNext(arg)) {
@@ -6568,35 +6627,24 @@ function parseArgs(ctx, args, opts) {
         if (!option2.args?.length) {
           return false;
         }
-        const nextValue = currentValue ?? args[argsIndex + 1];
-        if (!nextValue) {
+        const nextValue = next();
+        if (nextValue === void 0) {
           return false;
         }
         if (option2.args.length > 1 && optionArgsIndex >= option2.args.length) {
           return false;
         }
-        if (!arg2.optional) {
+        let nextOption;
+        if (!arg2.optional && (!arg2.variadic || !(nextOption = getOption(opts.flags ?? [], nextValue)))) {
           return true;
         }
         if (option2.equalsSign && arg2.optional && !arg2.variadic && typeof currentValue === "undefined") {
           return false;
         }
-        if (arg2.optional || arg2.variadic) {
+        if ((arg2.optional || arg2.variadic) && !(nextOption ?? getOption(opts.flags ?? [], nextValue))) {
           return nextValue[0] !== "-" || typeof currentValue !== "undefined" || arg2.type === "number" && !isNaN(Number(nextValue));
         }
         return false;
-      }
-      function parseValue(option3, arg2, value) {
-        const result2 = opts.parse ? opts.parse({
-          label: "Option",
-          type: arg2.type || "string",
-          name: `--${option3.name}`,
-          value
-        }) : parseDefaultType(option3, arg2, value);
-        if (typeof result2 !== "undefined") {
-          increase = true;
-        }
-        return result2;
       }
     }, setFlagValue = function(value) {
       ctx.flags[propName] = value;
@@ -6608,6 +6656,7 @@ function parseArgs(ctx, args, opts) {
     let current = args[argsIndex];
     let currentValue;
     let negate = false;
+    let skipArgument = false;
     if (inLiteral) {
       ctx.literal.push(current);
       continue;
@@ -6618,32 +6667,37 @@ function parseArgs(ctx, args, opts) {
       ctx.unknown.push(current);
       continue;
     }
-    const isFlag = current.length > 1 && current[0] === "-";
-    if (!isFlag) {
+    const maybeIsFlag = current.length > 1 && current[0] === "-";
+    if (!maybeIsFlag) {
       if (opts.stopEarly) {
         ctx.stopEarly = true;
       }
-      ctx.unknown.push(current);
-      continue;
+      if (opts.stopEarly || !opts.args?.length) {
+        ctx.unknown.push(current);
+        continue;
+      }
     }
-    const isShort = current[1] !== "-";
-    const isLong = isShort ? false : current.length > 3 && current[2] !== "-";
-    if (!isShort && !isLong) {
-      throw new InvalidOptionError(current, opts.flags ?? []);
-    }
-    if (isShort && current.length > 2 && current[2] !== ".") {
-      args.splice(argsIndex, 1, ...splitFlags(current));
+    const maybeIsShort = maybeIsFlag && current[1] !== "-";
+    const maybeIsLong = maybeIsShort ? false : maybeIsFlag && current.length > 3 && current[2] !== "-";
+    const currentRaw = current;
+    let splitCount = 0;
+    if (maybeIsShort && current.length > 2 && current[2] !== ".") {
+      const flags = splitFlags(current);
+      splitCount = flags.length;
+      args.splice(argsIndex, 1, ...flags);
       current = args[argsIndex];
-    } else if (isLong && current.startsWith("--no-")) {
+    } else if (maybeIsLong && current.startsWith("--no-")) {
       negate = true;
     }
     const equalSignIndex = current.indexOf("=");
     if (equalSignIndex !== -1) {
-      currentValue = current.slice(equalSignIndex + 1) || void 0;
+      currentValue = current.slice(equalSignIndex + 1);
       current = current.slice(0, equalSignIndex);
     }
     if (opts.flags) {
-      option = getOption(opts.flags, current);
+      if (maybeIsFlag) {
+        option = getOption(opts.flags, current);
+      }
       if (!option) {
         const name = current.replace(/^-+/, "");
         option = matchWildCardOptions(name, opts.flags);
@@ -6653,16 +6707,93 @@ function parseArgs(ctx, args, opts) {
             ctx.unknown.push(args[argsIndex]);
             continue;
           }
+          if (opts.args?.length) {
+            const argDef = opts.args[argIndex];
+            if (argDef) {
+              const args2 = ctx.args ??= [];
+              if (argDef.optional && currentRaw === "") {
+                if (!argDef.variadic) {
+                  args2.push(void 0);
+                  argIndex++;
+                }
+                continue;
+              }
+              if (argDef.list) {
+                args2.push(parseListValue(opts, {
+                  label: "Argument",
+                  name: argDef.name || `arg[${argIndex}]`,
+                  type: argDef.type || "string",
+                  value: currentRaw,
+                  separator: argDef.separator
+                }));
+              } else {
+                args2.push(parseValue(opts, {
+                  label: "Argument",
+                  name: argDef.name || `arg[${argIndex}]`,
+                  type: argDef.type || "string",
+                  value: currentRaw
+                }));
+              }
+              if (splitCount > 1) {
+                argsIndex += splitCount - 1;
+              }
+              if (!argDef.variadic) {
+                argIndex++;
+              } else if (opts.args[argIndex + 1]) {
+                throw new UnexpectedArgumentAfterVariadicArgumentError(currentRaw);
+              }
+              continue;
+            }
+          }
+          if (!maybeIsFlag) {
+            throw new TooManyArgumentsError([currentRaw]);
+          }
           throw new UnknownOptionError(current, opts.flags);
         }
       }
     } else {
+      if (opts.args?.length && !maybeIsFlag) {
+        const argDef = opts.args[argIndex];
+        if (argDef) {
+          const posArgs = ctx.args ??= [];
+          if (argDef.optional && currentRaw === "") {
+            if (!argDef.variadic) {
+              posArgs.push(void 0);
+              argIndex++;
+            }
+            continue;
+          }
+          if (argDef.list) {
+            posArgs.push(parseListValue(opts, {
+              label: "Argument",
+              name: argDef.name || `arg[${argIndex}]`,
+              type: argDef.type || "string",
+              value: currentRaw,
+              separator: argDef.separator
+            }));
+          } else {
+            posArgs.push(parseValue(opts, {
+              label: "Argument",
+              name: argDef.name || `arg[${argIndex}]`,
+              type: argDef.type || "string",
+              value: currentRaw
+            }));
+          }
+          if (!argDef.variadic) {
+            argIndex++;
+          } else if (opts.args[argIndex + 1]) {
+            throw new UnexpectedArgumentAfterVariadicArgumentError(currentRaw);
+          }
+          continue;
+        }
+      }
       option = {
         name: current.replace(/^-+/, ""),
         optionalValue: true,
         type: "string"
       };
     }
+    ctx.parsedFlags.push(args[argsIndex]);
     if (option.standalone) {
       ctx.standalone = option;
     }
@@ -6677,11 +6808,14 @@ function parseArgs(ctx, args, opts) {
     }
     if (option.type && !option.args?.length) {
       option.args = [{
+        name: option.name,
         type: option.type,
         optional: option.optionalValue,
         variadic: option.variadic,
         list: option.list,
-        separator: option.separator
+        separator: option.separator,
+        default: option.default,
+        value: option.value
       }];
     }
     if (opts.flags?.length && !option.args?.length && typeof currentValue !== "undefined") {
@@ -6692,13 +6826,30 @@ function parseArgs(ctx, args, opts) {
     const next = () => currentValue ?? args[argsIndex + 1];
     const previous = ctx.flags[propName];
     parseNext(option);
+    if (skipArgument) {
+      continue;
+    }
     if (typeof ctx.flags[propName] === "undefined") {
       if (option.args?.length && !option.args?.[optionArgsIndex].optional) {
         throw new MissingOptionValueError(option.name);
-      } else if (typeof option.default !== "undefined" && (option.type || option.value || option.args?.length)) {
+      } else if (option.default !== void 0 && (option.type || option.value || option.args?.length) || option.args?.some((arg) => arg.default !== void 0 && (arg.type || arg.value))) {
         ctx.flags[propName] = getDefaultValue(option);
       } else {
         setFlagValue(true);
+      }
+    }
+    if (option.args?.some((arg) => arg.value) && (option.args.length > 1 || !option.value)) {
+      if (option.args.length === 1) {
+        const arg = option.args[0];
+        if (typeof arg.value === "function") {
+          ctx.flags[propName] = arg.value(ctx.flags[propName]);
+        }
+      } else {
+        for (const [index, arg] of option.args.entries()) {
+          if (typeof arg.value === "function") {
+            ctx.flags[propName][index] = arg.value(ctx.flags[propName][index]);
+          }
+        }
       }
     }
     if (option.value) {
@@ -6749,21 +6900,90 @@ function splitFlags(flag) {
   }
   return normalized;
 }
-function parseDefaultType(option, arg, value) {
-  const type = arg.type || "string";
+function parseValue(opts, options) {
+  return opts.parse ? opts.parse(options) : parseDefaultType(options);
+}
+function parseListValue(opts, options) {
+  return options.value.split(options.separator || ",").map((nextValue) => {
+    const value = parseValue(opts, {
+      ...options,
+      value: nextValue
+    });
+    if (typeof value === "undefined") {
+      throw new InvalidOptionValueError(options.name, options.type || "?", nextValue);
+    }
+    return value;
+  });
+}
+function parseDefaultType({ label, name, type, value }) {
   const parseType = DefaultTypes[type];
   if (!parseType) {
     throw new UnknownTypeError(type, Object.keys(DefaultTypes));
   }
   return parseType({
-    label: "Option",
+    label,
     type,
-    name: `--${option.name}`,
+    name,
     value
   });
 }
+function validateArguments(ctx, opts, options = /* @__PURE__ */ new Map()) {
+  if (!opts.args?.length) {
+    return;
+  }
+  const hasDefaults = opts.args.some((arg) => arg.default !== void 0);
+  if (!ctx.args?.length && !hasDefaults) {
+    const required = opts.args.filter((expectedArg) => !expectedArg.optional).map((expectedArg) => expectedArg.name ?? `arg[${opts.args?.indexOf(expectedArg)}]`);
+    if (required.length) {
+      const hasStandaloneOption = [...options.keys()].some((name) => opts.flags && getOption(opts.flags, name)?.standalone);
+      if (!hasStandaloneOption) {
+        throw new MissingArgumentsError(required);
+      }
+    }
+  } else {
+    ctx.args ??= [];
+    for (const [index, expectedArg] of opts.args?.entries() ?? []) {
+      const mapArgValue = (parsed) => {
+        return expectedArg.value ? expectedArg.value(parsed) : parsed;
+      };
+      if (typeof ctx.args[index] === "undefined") {
+        if (expectedArg.default !== void 0) {
+          const defaultValue = typeof expectedArg.default === "function" ? expectedArg.default() : expectedArg.default;
+          const mappedValue2 = mapArgValue(defaultValue);
+          if (expectedArg.variadic && Array.isArray(mappedValue2)) {
+            ctx.args.splice(index, 0, ...mappedValue2);
+            continue;
+          } else {
+            ctx.args[index] = mappedValue2;
+            continue;
+          }
+        }
+        if (expectedArg.optional) {
+          continue;
+        }
+        throw new MissingArgumentError(expectedArg.name ?? `arg[${index}]`);
+      }
+      let mappedValue;
+      if (expectedArg.variadic) {
+        mappedValue = mapArgValue(ctx.args.splice(index));
+      } else {
+        mappedValue = mapArgValue(ctx.args[index]);
+      }
+      if (typeof mappedValue !== "undefined" || typeof ctx.args[index] !== "undefined") {
+        if (expectedArg.variadic && Array.isArray(mappedValue)) {
+          ctx.args.splice(index, 0, ...mappedValue);
+        } else if (typeof mappedValue !== "undefined") {
+          ctx.args[index] = mappedValue;
+        }
+      }
+    }
+    if (ctx.unknown.length) {
+      throw new TooManyArgumentsError(ctx.unknown);
+    }
+  }
+}
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/_utils.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/_utils.js
 function getFlag2(name) {
   if (name.startsWith("-")) {
     return name;
@@ -6822,6 +7042,15 @@ function parseArgumentsDefinition(argsDefinition, validate = true, all) {
       list: type ? argDef.arg.indexOf(type + "[]") !== -1 : false,
       type
     };
+    if (argDef.value !== void 0) {
+      details.value = argDef.value;
+    }
+    if (argDef.default !== void 0) {
+      details.default = argDef.default;
+    }
+    if (argDef.separator !== void 0) {
+      details.separator = argDef.separator;
+    }
     if (validate && !details.optional && hasOptional) {
       throw new UnexpectedRequiredArgumentError(details.name);
     }
@@ -6866,16 +7095,16 @@ function underscoreToCamelCase(str) {
   return str.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/_errors.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/_errors.js
 var CommandError = class _CommandError extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message, options) {
+    super(message, options);
     Object.setPrototypeOf(this, _CommandError.prototype);
   }
 };
 var ValidationError2 = class _ValidationError extends CommandError {
-  constructor(message, { exitCode } = {}) {
-    super(message);
+  constructor(message, { exitCode, cause } = {}) {
+    super(message, { cause });
     Object.defineProperty(this, "exitCode", {
       enumerable: true,
       configurable: true,
@@ -6988,26 +7217,14 @@ var NoArgumentsAllowedError = class _NoArgumentsAllowedError extends ValidationE
     Object.setPrototypeOf(this, _NoArgumentsAllowedError.prototype);
   }
 };
-var MissingArgumentsError = class _MissingArgumentsError extends ValidationError2 {
-  constructor(names) {
-    super(`Missing argument(s): ${names.join(", ")}`);
-    Object.setPrototypeOf(this, _MissingArgumentsError.prototype);
-  }
-};
-var MissingArgumentError = class _MissingArgumentError extends ValidationError2 {
-  constructor(name) {
-    super(`Missing argument: ${name}`);
-    Object.setPrototypeOf(this, _MissingArgumentError.prototype);
-  }
-};
-var TooManyArgumentsError = class _TooManyArgumentsError extends ValidationError2 {
+var TooManyArgumentsError2 = class _TooManyArgumentsError extends ValidationError2 {
   constructor(args) {
     super(`Too many arguments: ${args.join(" ")}`);
     Object.setPrototypeOf(this, _TooManyArgumentsError.prototype);
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.0.0/runtime/exit.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.1.0/runtime/exit.js
 function exit(code2) {
   const { Deno: Deno4, process: process2 } = globalThis;
   const exit2 = Deno4?.exit ?? process2?.exit;
@@ -7017,7 +7234,7 @@ function exit(code2) {
   throw new Error("unsupported runtime");
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.0.0/runtime/get_env.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.1.0/runtime/get_env.js
 function getEnv(name) {
   const { Deno: Deno4, process: process2 } = globalThis;
   if (Deno4) {
@@ -7028,7 +7245,7 @@ function getEnv(name) {
   throw new Error("unsupported runtime");
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/border.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/border.js
 var border = {
   top: "\u2500",
   topMid: "\u252C",
@@ -7047,7 +7264,7 @@ var border = {
   middle: "\u2502"
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/cell.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/cell.js
 var Cell = class _Cell {
   /** Get cell length. */
   get length() {
@@ -7227,7 +7444,7 @@ var Cell = class _Cell {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/column.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/column.js
 var Column = class _Column {
   constructor() {
     Object.defineProperty(this, "opts", {
@@ -7275,6 +7492,37 @@ var Column = class _Column {
     this.opts.align = direction;
     return this;
   }
+  /**
+   * Set column flex-shrink weight. Follows CSS flex-shrink semantics: each
+   * column's share of the reduction is proportional to `weight × width`, so
+   * a wider column or one with a higher weight absorbs more of the overflow.
+   * 0 = rigid (never shrinks), 1 = default. See MDN flex-shrink for full detail.
+   */
+  flexShrink(weight = 1) {
+    this.opts.flexShrink = weight;
+    return this;
+  }
+  /**
+   * Set column flex-grow weight. Follows CSS flex-grow semantics: available
+   * slack is distributed proportionally by weight, so weight 2 receives twice
+   * the extra space of weight 1. 0 = no grow.
+   * See MDN flex-grow for full detail.
+   */
+  flexGrow(weight = 1) {
+    this.opts.flexGrow = weight;
+    return this;
+  }
+  /**
+   * Shorthand to set both flex-grow and flex-shrink to the same value. Follows
+   * CSS flex semantics: the column will both expand into and contract out of
+   * available space proportionally. 0 = rigid.
+   * See MDN flex for full detail.
+   */
+  flex(weight = 1) {
+    this.opts.flexGrow = weight;
+    this.opts.flexShrink = weight;
+    return this;
+  }
   /** Get min column width. */
   getMinWidth() {
     return this.opts.minWidth;
@@ -7295,9 +7543,17 @@ var Column = class _Column {
   getAlign() {
     return this.opts.align;
   }
+  /** Get column flex-shrink weight. */
+  getFlexShrink() {
+    return this.opts.flexShrink;
+  }
+  /** Get column flex-grow weight. */
+  getFlexGrow() {
+    return this.opts.flexGrow;
+  }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/unicode_width.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/unicode_width.js
 var tables = null;
 var data = {
   "UNICODE_VERSION": "15.0.0",
@@ -7317,20 +7573,26 @@ var data = {
   ]
 };
 function lookupWidth(cp) {
-  if (!tables)
+  if (!tables) {
     tables = data.tables.map(runLengthDecode);
-  const t1Offset = tables[0][cp >> 13 & 255];
-  const t2Offset = tables[1][128 * t1Offset + (cp >> 6 & 127)];
-  const packedWidths = tables[2][16 * t2Offset + (cp >> 2 & 15)];
+  }
+  const t1Offset = tables.at(0)?.[cp >> 13 & 255] ?? 0;
+  const t2Offset = tables.at(1)?.[128 * t1Offset + (cp >> 6 & 127)] ?? 0;
+  const packedWidths = tables.at(2)?.[16 * t2Offset + (cp >> 2 & 15)] ?? 0;
   const width = packedWidths >> 2 * (cp & 3) & 3;
   return width === 3 ? 1 : width;
 }
 var cache = /* @__PURE__ */ new Map();
 function charWidth(char) {
-  if (cache.has(char))
-    return cache.get(char);
+  const cached = cache.get(char);
+  if (cached !== void 0) {
+    return cached;
+  }
   const codePoint = char.codePointAt(0);
-  let width = null;
+  if (codePoint === void 0) {
+    return null;
+  }
+  let width;
   if (codePoint < 127) {
     width = codePoint >= 32 ? 1 : codePoint === 0 ? 0 : null;
   } else if (codePoint >= 160) {
@@ -7349,12 +7611,12 @@ function runLengthDecode({ d, r }) {
   const runLengths = atob(r);
   let out = "";
   for (const [i, ch] of [...runLengths].entries()) {
-    out += data2[i].repeat(ch.codePointAt(0));
+    out += data2.charAt(i).repeat(ch.codePointAt(0) ?? 0);
   }
-  return Uint8Array.from([...out].map((x) => x.codePointAt(0)));
+  return Uint8Array.from([...out].map((x) => x.codePointAt(0) ?? 0));
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/_utils.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/_utils.js
 function longest(index, rows, maxWidth) {
   const cellLengths = rows.map((row) => {
     const cell = row[index];
@@ -7376,7 +7638,14 @@ var ansiRegexSource = (
 function getUnclosedAnsiRuns(text) {
   const tokens = [];
   for (const { groups } of text.matchAll(new RegExp(ansiRegexSource, "g"))) {
-    const [_kind, content] = Object.entries(groups).find(([_, val]) => val);
+    if (!groups) {
+      continue;
+    }
+    const entry = Object.entries(groups).find(([_, val]) => val);
+    if (!entry) {
+      continue;
+    }
+    const [_kind, content] = entry;
     tokens.push({ kind: _kind.slice(1), content });
   }
   let unclosed = [];
@@ -7397,7 +7666,7 @@ function getUnclosedAnsiRuns(text) {
   };
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/consume_words.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/consume_words.js
 function consumeWords(length, content) {
   let consumed = "";
   const words = content.split("\n")[0]?.split(/ /g);
@@ -7432,7 +7701,7 @@ function consumeChars(length, content) {
   return consumed;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/row.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/row.js
 var Row = class _Row extends Array {
   constructor() {
     super(...arguments);
@@ -7506,7 +7775,7 @@ var Row = class _Row extends Array {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/_layout.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/_layout.js
 var __classPrivateFieldGet = function(receiver, state, kind, f) {
   if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
   if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -7514,6 +7783,7 @@ var __classPrivateFieldGet = function(receiver, state, kind, f) {
 };
 var _TableLayout_instances;
 var _TableLayout_getRows;
+var sum = (numList) => numList.reduce((a, b) => a + b, 0);
 var TableLayout = class {
   /**
    * Table layout constructor.
@@ -7566,15 +7836,16 @@ var TableLayout = class {
         }
       }
     }
-    const padding = [];
-    const width = [];
-    for (let colIndex = 0; colIndex < columns; colIndex++) {
-      const column = this.options.columns.at(colIndex);
-      const minColWidth = column?.getMinWidth() ?? (Array.isArray(this.options.minColWidth) ? this.options.minColWidth[colIndex] : this.options.minColWidth);
-      const maxColWidth = column?.getMaxWidth() ?? (Array.isArray(this.options.maxColWidth) ? this.options.maxColWidth[colIndex] : this.options.maxColWidth);
-      const colWidth = longest(colIndex, rows, maxColWidth);
-      width[colIndex] = Math.min(maxColWidth, Math.max(minColWidth, colWidth));
-      padding[colIndex] = column?.getPadding() ?? (Array.isArray(this.options.padding) ? this.options.padding[colIndex] : this.options.padding);
+    const { padding, width, minColWidth, maxColWidth } = this.computeColumnDimensions(columns, rows);
+    if (isFinite(this.options.maxWidth)) {
+      const totalPadding = hasBorder ? sum(padding) * 2 + (columns + 1) : sum(padding.slice(0, -1));
+      const maxAllowable = this.options.maxWidth - totalPadding;
+      if (sum(width) > maxAllowable) {
+        this.applyFlexShrink(width, minColWidth, maxAllowable);
+      }
+      if (sum(width) < maxAllowable) {
+        this.applyFlexGrow(width, maxColWidth, maxAllowable);
+      }
     }
     return {
       padding,
@@ -7585,6 +7856,75 @@ var TableLayout = class {
       hasBodyBorder,
       hasHeaderBorder
     };
+  }
+  computeColumnDimensions(columns, rows) {
+    const padding = [];
+    const width = [];
+    const minColWidth = [];
+    const maxColWidth = [];
+    for (let colIndex = 0; colIndex < columns; colIndex++) {
+      const column = this.options.columns.at(colIndex);
+      minColWidth[colIndex] = column?.getMinWidth() ?? (Array.isArray(this.options.minColWidth) ? this.options.minColWidth[colIndex] : this.options.minColWidth) ?? 0;
+      maxColWidth[colIndex] = column?.getMaxWidth() ?? (Array.isArray(this.options.maxColWidth) ? this.options.maxColWidth[colIndex] : this.options.maxColWidth) ?? Infinity;
+      const colWidth = longest(colIndex, rows, maxColWidth[colIndex]);
+      width[colIndex] = Math.min(maxColWidth[colIndex], Math.max(minColWidth[colIndex], colWidth));
+      padding[colIndex] = column?.getPadding() ?? (Array.isArray(this.options.padding) ? this.options.padding[colIndex] : this.options.padding) ?? 0;
+    }
+    return { padding, width, minColWidth, maxColWidth };
+  }
+  applyFlexShrink(width, minColWidth, maxAllowable) {
+    const shrink = width.map((_w, i) => this.resolveColumnWeight("flexShrink", i));
+    let changed = true;
+    while (changed) {
+      changed = false;
+      if (sum(width) <= maxAllowable) {
+        break;
+      }
+      const overflow = sum(width) - maxAllowable;
+      const scaledTotal = sum(width.map((w, i) => shrink[i] > 0 && w > minColWidth[i] ? shrink[i] * w : 0));
+      if (scaledTotal === 0) {
+        break;
+      }
+      for (let i = 0; i < width.length; i++) {
+        if (shrink[i] > 0 && width[i] > minColWidth[i]) {
+          const target = Math.max(Math.max(1, minColWidth[i]), Math.floor(width[i] * (1 - overflow * shrink[i] / scaledTotal)));
+          if (target !== width[i]) {
+            width[i] = target;
+            changed = true;
+          }
+        }
+      }
+    }
+  }
+  applyFlexGrow(width, maxColWidth, maxAllowable) {
+    const grow = width.map((_w, i) => this.resolveColumnWeight("flexGrow", i));
+    let changed = true;
+    while (changed) {
+      changed = false;
+      if (sum(width) >= maxAllowable) {
+        break;
+      }
+      const slack = maxAllowable - sum(width);
+      const totalWeight = sum(grow.map((g, i) => width[i] < maxColWidth[i] ? g : 0));
+      if (totalWeight === 0) {
+        break;
+      }
+      for (let i = 0; i < width.length; i++) {
+        if (grow[i] > 0 && width[i] < maxColWidth[i]) {
+          const extra = Math.floor(slack * grow[i] / totalWeight);
+          const newWidth = Math.min(maxColWidth[i], width[i] + extra);
+          if (newWidth !== width[i]) {
+            width[i] = newWidth;
+            changed = true;
+          }
+        }
+      }
+    }
+  }
+  resolveColumnWeight(prop, i) {
+    const getter = prop === "flexShrink" ? "getFlexShrink" : "getFlexGrow";
+    const weight = this.options.columns.at(i)?.[getter]() ?? (Array.isArray(this.options[prop]) ? this.options[prop][i] : this.options[prop]);
+    return Number.isFinite(weight) && weight > 0 ? weight : 0;
   }
   /**
    * Fills rows and cols by specified row/col span with a reference of the
@@ -7772,6 +8112,9 @@ var TableLayout = class {
    * @param maxLength Max length of content to render.
    */
   renderCellValue(cell, maxLength) {
+    if (maxLength <= 0) {
+      return { current: "", next: "" };
+    }
     const length = Math.min(maxLength, strLength(cell.toString()));
     let words = consumeWords(length, cell.toString());
     const breakWord = strLength(words) > length;
@@ -7974,7 +8317,7 @@ _TableLayout_instances = /* @__PURE__ */ new WeakSet(), _TableLayout_getRows = f
   });
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.0.0/table.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/table/1.1.0/table.js
 var Table = class _Table extends Array {
   constructor() {
     super(...arguments);
@@ -7988,6 +8331,9 @@ var Table = class _Table extends Array {
         maxColWidth: Infinity,
         minColWidth: 0,
         padding: 1,
+        maxWidth: Infinity,
+        flexShrink: 0,
+        flexGrow: 0,
         chars: { ..._Table._chars },
         columns: []
       }
@@ -8135,6 +8481,58 @@ var Table = class _Table extends Array {
     return this;
   }
   /**
+   * Set max table width
+   *
+   * @param width     Max table width.
+   * @param override  Override existing value.
+   */
+  maxWidth(width, override = true) {
+    if (override || typeof this.options.maxWidth === "undefined") {
+      this.options.maxWidth = width;
+    }
+    return this;
+  }
+  /**
+   * Set column flex-shrink weight. Follows CSS flex-shrink semantics: each
+   * column's share of the reduction is proportional to `weight × width`, so
+   * a wider column or one with a higher weight absorbs more of the overflow.
+   * 0 = no shrink (default), >= 1 = shrinkable.
+   *
+   * @param flexShrink  Per-column shrink weight, or a single value for all columns.
+   * @param override    Override existing value.
+   */
+  flexShrink(flexShrink = 1, override = true) {
+    if (override || typeof this.options.flexShrink === "undefined") {
+      this.options.flexShrink = flexShrink;
+    }
+    return this;
+  }
+  /**
+   * Set column flex-grow weight. Follows CSS flex-grow semantics: available
+   * slack is distributed proportionally by weight, so weight 2 receives twice
+   * the extra space of weight 1. 0 = no grow (default), >= 1 = growable.
+   *
+   * @param flexGrow  Per-column grow weight, or a single value for all columns.
+   * @param override  Override existing value.
+   */
+  flexGrow(flexGrow = 1, override = true) {
+    if (override || typeof this.options.flexGrow === "undefined") {
+      this.options.flexGrow = flexGrow;
+    }
+    return this;
+  }
+  /**
+   * Shorthand to set both flex-grow and flex-shrink to the same value.
+   * Columns will both expand into and contract out of
+   * available space proportionally. 0 = rigid (default), >= 1 = flexible.
+   *
+   * @param flex      Per-column weight, or a single value for all columns.
+   * @param override  Override existing value.
+   */
+  flex(flex = 1, override = true) {
+    return this.flexGrow(flex, override).flexShrink(flex, override);
+  }
+  /**
    * Set table indentation.
    *
    * @param width     Indent width.
@@ -8252,17 +8650,34 @@ Object.defineProperty(Table, "_chars", {
   value: { ...border }
 });
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.0.0/runtime/inspect.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.1.0/runtime/get_columns.js
+function getColumns() {
+  try {
+    const { Deno: Deno4, process: process2 } = globalThis;
+    if (Deno4) {
+      const cols = Deno4.consoleSize().columns;
+      return cols && cols > 0 ? cols : null;
+    } else if (process2) {
+      const cols = process2.stdout.columns;
+      return cols && cols > 0 ? cols : null;
+    }
+  } catch (_error) {
+    return null;
+  }
+  throw new Error("unsupported runtime");
+}
+
+// dist/dnt/esm/deps/jsr.io/@cliffy/internal/1.1.0/runtime/inspect.js
 function inspect(value, colors2) {
   const { Deno: Deno4 } = globalThis;
   return Deno4?.inspect(value, { depth: 1, colors: colors2, trailingComma: false }) ?? JSON.stringify(value, null, 2);
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/type.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/type.js
 var Type = class {
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/help/_help_generator.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/help/_help_generator.js
 var HelpGenerator = class _HelpGenerator {
   /** Generate help text for given command. */
   static generate(cmd, options) {
@@ -8292,8 +8707,11 @@ var HelpGenerator = class _HelpGenerator {
       hints: true,
       colors: true,
       long: false,
+      width: getColumns() ?? 150,
+      maxWidth: Infinity,
       ...options
     };
+    this.options.width = Math.min(this.options.width, this.options.maxWidth);
   }
   generate() {
     const areColorsEnabled = getColorEnabled();
@@ -8333,7 +8751,7 @@ var HelpGenerator = class _HelpGenerator {
     }
     return this.label("Description") + Table.from([
       [dedent(this.cmd.getDescription())]
-    ]).indent(this.indent).maxColWidth(140).padding(1).toString() + "\n";
+    ]).indent(this.indent).maxColWidth(this.options.width - this.indent).padding(1).toString() + "\n";
   }
   generateArguments() {
     const args = this.cmd.getArguments();
@@ -8347,7 +8765,7 @@ var HelpGenerator = class _HelpGenerator {
         getDescription(argument.description ?? "", !this.options.long),
         this.generateArgumentHints(argument)
       ])
-    ]).padding([2, 1, 2]).indent(this.indent).maxColWidth([60, 1, 80, 60]).toString() + "\n";
+    ]).padding([2, 1, 2]).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 1, 1]).toString() + "\n";
   }
   generateOptions() {
     const options = this.cmd.getOptions(false);
@@ -8394,7 +8812,7 @@ var HelpGenerator = class _HelpGenerator {
           getDescription(option.description, !this.options.long),
           this.generateOptionHints(option)
         ])
-      ]).padding([2, 2, 1, 2]).indent(this.indent).maxColWidth([60, 60, 1, 80, 60]).toString() + "\n";
+      ]).padding([2, 2, 1, 2]).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 0, 1, 1]).toString() + "\n";
     }
     return this.label(group.name ?? "Options") + Table.from([
       ...group.options.map((option) => [
@@ -8403,7 +8821,7 @@ var HelpGenerator = class _HelpGenerator {
         getDescription(option.description, !this.options.long),
         this.generateOptionHints(option)
       ])
-    ]).indent(this.indent).maxColWidth([60, 1, 80, 60]).padding([2, 1, 2]).toString() + "\n";
+    ]).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 1, 1]).padding([2, 1, 2]).toString() + "\n";
   }
   generateCommands() {
     const commands = this.cmd.getCommands(false);
@@ -8419,7 +8837,7 @@ var HelpGenerator = class _HelpGenerator {
           red(bold("-")),
           command.getShortDescription()
         ])
-      ]).indent(this.indent).maxColWidth([60, 60, 1, 80]).padding([2, 2, 1, 2]).toString() + "\n";
+      ]).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 0, 1]).padding([2, 2, 1, 2]).toString() + "\n";
     }
     return this.label("Commands") + Table.from([
       ...commands.map((command) => [
@@ -8427,7 +8845,7 @@ var HelpGenerator = class _HelpGenerator {
         red(bold("-")),
         command.getShortDescription()
       ])
-    ]).maxColWidth([60, 1, 80]).padding([2, 1, 2]).indent(this.indent).toString() + "\n";
+    ]).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 1]).padding([2, 1, 2]).indent(this.indent).toString() + "\n";
   }
   generateEnvironmentVariables() {
     const envVars = this.cmd.getEnvVars(false);
@@ -8442,7 +8860,7 @@ var HelpGenerator = class _HelpGenerator {
         this.options.long ? dedent(envVar.description) : envVar.description.trim().split("\n", 1)[0],
         envVar.required ? `(${yellow(`required`)})` : ""
       ])
-    ]).padding([2, 2, 1, 2]).indent(this.indent).maxColWidth([60, 60, 1, 80, 10]).toString() + "\n";
+    ]).padding([2, 2, 1, 2]).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 0, 0, 1, 1]).toString() + "\n";
   }
   generateExamples() {
     const examples = this.cmd.getExamples();
@@ -8452,7 +8870,7 @@ var HelpGenerator = class _HelpGenerator {
     return this.label("Examples") + Table.from(examples.map((example) => [
       dim(bold(example.name)),
       dedent(example.description)
-    ])).padding(1).indent(this.indent).maxColWidth(150).toString() + "\n";
+    ])).padding(1).indent(this.indent).maxWidth(this.options.width - this.indent).flexShrink([0, 1]).toString() + "\n";
   }
   generateOptionHints(option) {
     if (!this.options.hints) {
@@ -8524,7 +8942,7 @@ function highlightArgumentDetails(arg, types = true) {
   return str;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/boolean.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/boolean.js
 var BooleanType = class extends Type {
   /** Parse boolean type. */
   parse(type) {
@@ -8536,7 +8954,7 @@ var BooleanType = class extends Type {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/string.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/string.js
 var StringType = class extends Type {
   /** Complete string type. */
   parse(type) {
@@ -8544,14 +8962,14 @@ var StringType = class extends Type {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/file.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/file.js
 var FileType = class extends StringType {
   constructor() {
     super();
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/integer.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/integer.js
 var IntegerType = class extends Type {
   /** Parse integer type. */
   parse(type) {
@@ -8559,7 +8977,7 @@ var IntegerType = class extends Type {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/number.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/number.js
 var NumberType = class extends Type {
   /** Parse number type. */
   parse(type) {
@@ -8567,14 +8985,14 @@ var NumberType = class extends Type {
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/secret.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/secret.js
 var SecretType = class extends StringType {
   defaultText() {
     return "******";
   }
 };
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/upgrade/_check_version.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/upgrade/_check_version.js
 async function checkVersion(cmd) {
   const mainCommand = cmd.getMainCommand();
   const upgradeCommand = mainCommand.getCommand("upgrade");
@@ -8596,7 +9014,7 @@ function isUpgradeCommand(command) {
   return command instanceof Command && "getLatestVersion" in command && "hasRequiredPermissions" in command;
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/command.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/command.js
 var Command = class _Command {
   constructor() {
     Object.defineProperty(this, "cmd", {
@@ -8787,18 +9205,78 @@ var Command = class _Command {
     return typeof name === "undefined" ? this.settings.meta : this.settings.meta[name];
   }
   /**
-   * Set command help.
+   * Set help options or define a custom help handler or help string.
    *
-   * @param help Help string, method, or config for generator that returns the help string.
+   * @param help Options for the build-in help generator or a custom help string
+   * or function that generates the help string. If the help is a function, it
+   * receives the command instance and the help options as parameters and should
+   * return the help string. If the help is a string, it is returned as is when
+   * the help is called.
+   * @param customHelpOptions Custom help options. If the first parameter is an
+   * object, it is treated as custom help options and the default help generator
+   * will be used to generate the help text based on these options.
+   *
+   * @example Help options
+   *
+   * ```ts
+   * import { Command } from "@cliffy/command";
+   *
+   * await new Command()
+   *   .name("demo")
+   *   .help({ auto: true })
+   *   .parse();
+   * ```
+   *
+   * @example Custom help string
+   *
+   * ```ts
+   * import { Command } from "@cliffy/command";
+   *
+   * await new Command()
+   *   .name("demo")
+   *   .help("This is a custom help string.")
+   *   .parse();
+   * ```
+   *
+   * @example Custom help handler
+   *
+   * ```ts
+   * import { Command } from "@cliffy/command";
+   *
+   * await new Command()
+   *   .name("demo")
+   *   .help((cmd) => {
+   *     return `This is a custom help string for command ${cmd.getName()}.`;
+   *   })
+   *   .parse();
+   * ```
+   *
+   * @example Help help handler with options
+   *
+   * ```ts
+   * import { Command } from "@cliffy/command";
+   *
+   * await new Command()
+   *   .name("demo")
+   *   .help(
+   *     (cmd, options) => {
+   *       return `This is a custom help string for command ${cmd.getName()} with options: ${JSON.stringify(options)}.`;
+   *     },
+   *     { auto: true },
+   *   )
+   *   .parse();
+   * ```
    */
-  help(help) {
+  help(help, customHelpOptions) {
     if (typeof help === "string") {
       this.cmd.settings.help = () => help;
     } else if (typeof help === "function") {
       this.cmd.settings.help = help;
     } else {
+      customHelpOptions = help;
       this.cmd.settings.help = (cmd, options) => HelpGenerator.generate(cmd, { ...help, ...options });
     }
+    this.cmd.settings.autoHelp = customHelpOptions?.auto;
     return this;
   }
   /**
@@ -9062,8 +9540,8 @@ var Command = class _Command {
   /**
    * Set default command.
    *
-   * The default command is executed when the program was called without any
-   * arguments.
+   * The default command is executed when the command was called without any
+   * additional arguments.
    *
    * @param name Name of the default command.
    */
@@ -9337,7 +9815,8 @@ var Command = class _Command {
       stopEarly: false,
       stopOnUnknown: false,
       defaults: {},
-      actions: []
+      actions: [],
+      parsedFlags: []
     };
     return this.parseCommand(ctx);
   }
@@ -9346,9 +9825,17 @@ var Command = class _Command {
       this.reset();
       this.registerDefaults();
       this.props.rawArgs = ctx.unknown.slice();
+      if (this.settings.defaultCommand && !ctx.parsedFlags.length && !ctx.unknown.length) {
+        const defaultCommand = this.getCommand(this.settings.defaultCommand, true);
+        if (!defaultCommand) {
+          throw new DefaultCommandNotFoundError(this.settings.defaultCommand, this.getCommands());
+        }
+        defaultCommand.props.globalParent = this;
+        return defaultCommand.parseCommand(ctx);
+      }
       if (this.settings.useRawArgs) {
         await this.parseEnvVars(ctx, this.builder.envVars);
-        return await this.execute(ctx.env, ctx.unknown);
+        return await this.execute(ctx.env, ctx.unknown, ctx);
       }
       let preParseGlobals = false;
       let subCommand;
@@ -9357,7 +9844,7 @@ var Command = class _Command {
         if (!subCommand) {
           const optionName = ctx.unknown[0].replace(/^-+/, "").split("=")[0];
           const option = this.getOption(optionName, true);
-          if (option?.global) {
+          if (option?.global && !option.standalone) {
             preParseGlobals = true;
             await this.parseGlobalOptionsAndEnvVars(ctx);
           }
@@ -9372,7 +9859,10 @@ var Command = class _Command {
       }
       await this.parseOptionsAndEnvVars(ctx, preParseGlobals);
       const options = { ...ctx.env, ...ctx.flags };
-      const args = await this.parseArguments(ctx, options);
+      this.props.parsedOptions = options;
+      await this.processArguments(ctx);
+      const args = ctx.args ?? [];
+      this.props.parsedArgs = args;
       this.props.literalArgs = ctx.literal;
       if (ctx.actions.length) {
         await Promise.all(ctx.actions.map((action) => action.call(this, options, ...args)));
@@ -9385,7 +9875,7 @@ var Command = class _Command {
           };
         }
       }
-      return await this.execute(options, args);
+      return await this.execute(options, args, ctx);
     } catch (error) {
       this.handleError(error);
     }
@@ -9417,11 +9907,13 @@ var Command = class _Command {
   async parseOptionsAndEnvVars(ctx, preParseGlobals) {
     const helpOption = this.getHelpOption();
     const isVersionOption = this.props.versionOption?.flags.includes(ctx.unknown[0]);
-    const isHelpOption = helpOption && ctx.flags?.[helpOption.name] === true;
+    const isHelpOption = helpOption && (preParseGlobals ? ctx.flags?.[helpOption.name] === true : ctx.unknown.some((unknown) => helpOption.flags.includes(unknown)));
     const envVars = preParseGlobals ? this.builder.envVars.filter((envVar) => !envVar.global) : this.getEnvVars(true);
     await this.parseEnvVars(ctx, envVars, !isHelpOption && !isVersionOption);
     const options = this.getOptions(true);
-    this.parseOptions(ctx, options);
+    this.parseOptions(ctx, options, {
+      args: this.getArguments()
+    });
   }
   /** Register default options like `--version` and `--help`. */
   registerDefaults() {
@@ -9482,22 +9974,19 @@ var Command = class _Command {
   }
   /**
    * Execute command.
-   * @param options A map of options.
-   * @param args Command arguments.
+   * @param options A map of all options and environment variables. This also
+   * includes global options and environment variables. The options are parsed
+   * and processed by the command before passed to the action handler.
+   * @param args Positional arguments array.
+   * @param ctx Parse context.
    */
-  async execute(options, args) {
-    if (this.settings.defaultCommand && !args.length && !Object.keys(options).length) {
-      const cmd = this.getCommand(this.settings.defaultCommand, true);
-      if (!cmd) {
-        throw new DefaultCommandNotFoundError(this.settings.defaultCommand, this.getCommands());
-      }
-      cmd.props.globalParent = this;
-      return cmd.execute(options, args);
+  async execute(options, args, ctx) {
+    if (this.settings.commands.size && !ctx.unknown.length && !ctx.parsedFlags.length && !this.settings.actionHandler && this.isAutoHelpEnabled()) {
+      this.showHelp();
+      this.exit();
     }
     await this.executeGlobalAction(options, args);
-    if (this.settings.actionHandler) {
-      await this.settings.actionHandler.call(this, options, ...args);
-    }
+    await this.settings.actionHandler?.call(this, options, ...args);
     return {
       options,
       args,
@@ -9512,13 +10001,14 @@ var Command = class _Command {
     await this.settings.globalActionHandler?.call(this, options, ...args);
   }
   /** Parse raw command line arguments. */
-  parseOptions(ctx, options, { stopEarly = this.settings.stopEarly, stopOnUnknown = false, dotted = true } = {}) {
+  parseOptions(ctx, options, { stopEarly = this.settings.stopEarly, stopOnUnknown = false, dotted = true, args = [] } = {}) {
     parseFlags(ctx, {
       stopEarly,
       stopOnUnknown,
       dotted,
       allowEmpty: this.settings.allowEmpty,
       flags: options,
+      args,
       ignoreDefaults: ctx.env,
       parse: (type) => this.parseType(type),
       option: (option) => {
@@ -9543,7 +10033,7 @@ var Command = class _Command {
    * @param validate when true, throws an error if a required env var is missing.
    */
   async parseEnvVars(ctx, envVars, validate = true) {
-    for (const envVar of envVars) {
+    await Promise.all(envVars.map(async (envVar) => {
       const env = await this.findEnvVar(envVar.names);
       if (env) {
         const parseType = (value) => {
@@ -9566,14 +10056,14 @@ var Command = class _Command {
       } else if (envVar.required && validate) {
         throw new MissingRequiredEnvVarError(envVar);
       }
-    }
+    }));
   }
   async findEnvVar(names) {
-    for (const name of names) {
-      const status = await globalThis.Deno?.permissions.query({
-        name: "env",
-        variable: name
-      });
+    const statuses = await Promise.all(names.map(async (name) => {
+      const status = await globalThis.Deno?.permissions.query({ name: "env", variable: name });
+      return { name, status };
+    }));
+    for (const { name, status } of statuses) {
       if (!status || status.state === "granted") {
         const value = getEnv(name);
         if (value) {
@@ -9584,97 +10074,30 @@ var Command = class _Command {
     return void 0;
   }
   /**
-   * Parse command-line arguments.
-   * @param ctx     Parse context.
-   * @param options Parsed command line options.
+   * Processes command-line arguments.
+   *
+   * @param ctx Parse context.
    */
-  async parseArguments(ctx, options) {
-    const params = [];
-    const args = ctx.unknown.slice();
-    if (!this.hasArguments()) {
-      if (args.length) {
-        if (this.hasCommands(true)) {
-          if (this.hasCommand(args[0], true)) {
-            throw new TooManyArgumentsError(args);
-          } else {
-            throw new UnknownCommandError(args[0], this.getCommands());
-          }
+  async processArguments(ctx) {
+    if (!this.hasArguments() && ctx.unknown.length) {
+      if (this.hasCommands(true)) {
+        if (this.hasCommand(ctx.unknown[0], true)) {
+          throw new TooManyArgumentsError2(ctx.unknown);
         } else {
-          throw new NoArgumentsAllowedError(this.getPath());
-        }
-      }
-    } else {
-      const hasDefaults = this.settings.arguments?.some((arg) => arg.default);
-      if (!args.length && !hasDefaults) {
-        const required = this.getArguments().filter((expectedArg) => !expectedArg.optional).map((expectedArg) => expectedArg.name);
-        if (required.length) {
-          const optionNames = Object.keys(options);
-          const hasStandaloneOption = !!optionNames.find((name) => this.getOption(name, true)?.standalone);
-          if (!hasStandaloneOption) {
-            throw new MissingArgumentsError(required);
-          }
+          throw new UnknownCommandError(ctx.unknown[0], this.getCommands());
         }
       } else {
-        for (const [index, expectedArg] of this.getArguments().entries()) {
-          const mapArgValue = (parsed) => {
-            return this.settings.arguments?.[index].value ? this.settings.arguments[index].value(parsed) : parsed;
-          };
-          if (!args.length) {
-            if (this.settings.arguments?.[index].default !== void 0) {
-              const defaultValue = typeof this.settings.arguments[index].default === "function" ? this.settings.arguments[index].default.call(this) : this.settings.arguments[index].default;
-              const mappedValue = mapArgValue(defaultValue);
-              if (expectedArg.variadic && Array.isArray(mappedValue)) {
-                params.push(...mappedValue);
-                continue;
-              }
-              params.push(mappedValue);
-              continue;
-            }
-            if (expectedArg.optional) {
-              if (hasDefaults) {
-                params.push(void 0);
-              }
-              continue;
-            }
-            throw new MissingArgumentError(expectedArg.name);
-          }
-          let arg;
-          const parseArgValue = (value) => {
-            return expectedArg.list ? value.split(",").map((value2) => parseArgType(value2)) : parseArgType(value);
-          };
-          const parseArgType = (value) => {
-            return this.parseType({
-              label: "Argument",
-              type: expectedArg.type,
-              name: expectedArg.name,
-              value
-            });
-          };
-          if (expectedArg.variadic) {
-            arg = args.splice(0, args.length).map((value) => parseArgValue(value));
-          } else {
-            arg = parseArgValue(args.shift());
-          }
-          arg = mapArgValue(arg);
-          if (expectedArg.variadic && Array.isArray(arg)) {
-            params.push(...arg);
-          } else if (typeof arg !== "undefined") {
-            params.push(arg);
-          }
-        }
-        if (args.length) {
-          throw new TooManyArgumentsError(args);
-        }
+        throw new NoArgumentsAllowedError(this.getPath());
       }
     }
-    const values = await Promise.all(params);
-    while (values.length && values.at(-1) === void 0) {
-      values.pop();
+    if (ctx.args?.length) {
+      ctx.args = await Promise.all(ctx.args ?? []);
+    } else if (ctx.stopEarly || ctx.stopOnUnknown) {
+      ctx.args = ctx.unknown;
     }
-    return values;
   }
   handleError(error) {
-    this.throw(error instanceof ValidationError ? new ValidationError2(error.message) : error instanceof Error ? error : new Error(`[non-error-thrown] ${error}`));
+    this.throw(error instanceof ValidationError ? new ValidationError2(error.message, { cause: error }) : error instanceof Error ? error : new Error(`[non-error-thrown] ${error}`));
   }
   /**
    * Handle error. If `throwErrors` is enabled the error will be thrown,
@@ -9687,7 +10110,10 @@ var Command = class _Command {
     if (error instanceof ValidationError2) {
       error.cmd = this;
     }
-    this.getErrorHandler()?.(error, this);
+    this.getErrorHandler()?.(error, this, {
+      options: this.props.parsedOptions ?? {},
+      args: this.props.parsedArgs ?? []
+    });
     if (this.shouldThrowErrors() || !(error instanceof ValidationError2)) {
       throw error;
     }
@@ -10267,6 +10693,9 @@ ${bold(k)} ${brightBlue(v)}`).join("");
   getHelpOption() {
     return this.props.helpOption ?? this.parent?.getHelpOption();
   }
+  isAutoHelpEnabled() {
+    return this.settings.autoHelp ?? this.parent?.isAutoHelpEnabled() ?? true;
+  }
 };
 function findFlag(flags) {
   for (const flag of flags) {
@@ -10277,11 +10706,11 @@ function findFlag(flags) {
   return flags[0];
 }
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/child_command.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/child_command.js
 var _ChildCommandType_cmd;
 _ChildCommandType_cmd = /* @__PURE__ */ new WeakMap();
 
-// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.0.0/types/enum.js
+// dist/dnt/esm/deps/jsr.io/@cliffy/command/1.1.0/types/enum.js
 var EnumType = class extends Type {
   constructor(values) {
     super();
